@@ -5,86 +5,59 @@ using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-using HttpClient client = new();
+HttpClient client = new();
+List<Country> countries = new List<Country>();
 
-await GetData(client);
+var phoneResponse = client.GetAsync("http://country.io/phone.json").Result;
+var nameResponse = client.GetAsync("http://country.io/names.json").Result;
+var isoResponse = client.GetAsync("http://country.io/iso3.json").Result;
+var continentResponse = client.GetAsync("http://country.io/continent.json").Result;
+var currencyResponse = client.GetAsync("http://country.io/currency.json").Result;
+var capitalResponse = client.GetAsync("http://country.io/capital.json").Result;
 
-static async Task GetData(HttpClient client)
+var jsonResponse1 = phoneResponse.Content.ReadAsStringAsync().Result;
+var jsonResponse2 = nameResponse.Content.ReadAsStringAsync().Result;
+var jsonResponse3 = isoResponse.Content.ReadAsStringAsync().Result;
+var jsonResponse4 = continentResponse.Content.ReadAsStringAsync().Result;
+var jsonResponse5 = currencyResponse.Content.ReadAsStringAsync().Result;
+var jsonResponse6 = capitalResponse.Content.ReadAsStringAsync().Result;
+
+var phone = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonResponse1);
+var name = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonResponse2);
+var iso = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonResponse3);
+var continent = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonResponse4);
+var currency = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonResponse5);
+var capital = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonResponse6);
+
+Console.WriteLine();
+for (int i = 0; i < phone.Count; i++)
 {
-    List<Country> countries = new List<Country>();
-    using HttpResponseMessage phoneResponse = await client.GetAsync("http://country.io/phone.json");
-    using HttpResponseMessage nameResponse = await client.GetAsync("http://country.io/names.json");
-    using HttpResponseMessage isoResponse = await client.GetAsync("http://country.io/iso3.json");
-    using HttpResponseMessage continentResponse = await client.GetAsync("http://country.io/continent.json");
-    using HttpResponseMessage currencyResponse = await client.GetAsync("http://country.io/currency.json");
-    using HttpResponseMessage capitalResponse = await client.GetAsync("http://country.io/capital.json");
 
-    phoneResponse.EnsureSuccessStatusCode();
-    nameResponse.EnsureSuccessStatusCode();
-    isoResponse.EnsureSuccessStatusCode();
-    continentResponse.EnsureSuccessStatusCode();
-    currencyResponse.EnsureSuccessStatusCode();
-    capitalResponse.EnsureSuccessStatusCode();
-
-    var jsonResponse1 = phoneResponse.Content.ReadAsStringAsync().Result;
-    var jsonResponse2 = nameResponse.Content.ReadAsStringAsync().Result;
-    var jsonResponse3 = isoResponse.Content.ReadAsStringAsync().Result;
-    var jsonResponse4 = continentResponse.Content.ReadAsStringAsync().Result;
-    var jsonResponse5 = currencyResponse.Content.ReadAsStringAsync().Result;
-    var jsonResponse6 = capitalResponse.Content.ReadAsStringAsync().Result;
-
-    var phone = JObject.Parse(jsonResponse1);
-    var name = JsonConvert.DeserializeObject(jsonResponse2);
-    var iso = JsonConvert.DeserializeObject(jsonResponse3);
-    var continent = JsonConvert.DeserializeObject(jsonResponse4);
-    var currency = JsonConvert.DeserializeObject(jsonResponse5);
-    var capital = JsonConvert.DeserializeObject(jsonResponse6);
-
-
-    for (int i = 0; i < phone.Count; i++)
+    var obj = new Country
     {
-        var obj = new Country
-        {
-            Phone = new List<DataPair>(),
-            Name = new List<DataPair>(),
-            Continent = new List<DataPair>(),
-            Currency = new List<DataPair>(),
-            ISO = new List<DataPair>()
-        };
-
-        foreach (var item in phone)
-        {
-            obj.Phone.Add(new DataPair() { Key = item.Key, Value = item.Value.ToString() });
-            obj.ISO.Add(new DataPair() { Key = item.Key, Value = item.Value.ToString() });
-            obj.Name.Add(new DataPair() { Key = item.Key, Value = item.Value.ToString() });
-            obj.Currency.Add(new DataPair() { Key = item.Key, Value = item.Value.ToString() });
-            obj.Continent.Add(new DataPair() { Key = item.Key, Value = item.Value.ToString() });
-        }
-        countries.Add(obj);
-
-    }
-    foreach (var item in countries)
-    {
-        Console.WriteLine("{0,-10}{1,-10}{2,-15}{3,-15}{4,-25}{5,-15}{6,-15}", item.Phone, item.ISO, item.Capital, item.Currency, item.Continent, item.Name);
-    }
-
+        Name = name.Values.ToList()[i],
+        Continent = iso.Values.ToList()[i],
+        Currency = continent.Values.ToList()[i],
+        ISO = currency.Values.ToList()[i],
+        Capital = capital.Values.ToList()[i],
+        Phone = phone.Values.ToList()[i],
+        Code = phone.Keys.ToList()[i]
+    };
+    countries.Add(obj);
 }
 
-/*
-var rawObj = JObject.Parse(phoneResponse);
-Console.WriteLine(rawObj);
 
 
-var obj2 = new Country
+foreach (var item in countries)
 {
-    Phone = new List<DataPair>()
-};
-foreach (var item in rawObj)
-{
-    obj2.Phone.Add(new DataPair() { Key = item.Key, Value = item.Value.ToString() });
+    Console.WriteLine($"Phone: {item.Phone}");
+    Console.WriteLine($"Name: {item.Name}");
+    Console.WriteLine($"Continent: {item.Continent}");
+    Console.WriteLine($"ISO: {item.ISO}");
+    Console.WriteLine($"Capital: {item.Capital}");
+    Console.WriteLine($"Code: {item.Code}");
+    Console.WriteLine($"Currency: {item.Currency}");
+    Console.WriteLine("_____________________________________");
 }
 
-//    var obj = JsonConvert.DeserializeObject<SomeData>(json);
-//    Console.WriteLine($"{phoneResponse}\n");
-//    Console.WriteLine(phoneResponse);
-*/
+
